@@ -1,11 +1,15 @@
-HUELLA — Cloudflare deployment notes
+HUELLA — siguiente paso: conectar Cloudflare D1
 
-This is a starter scaffold. It does not yet implement the production user flows.
+IMPORTANTE: este ZIP agrega endpoints de acciones, pero no es producción segura. El ID de dispositivo es pseudónimo y NO equivale a autenticación. No guardar información sensible ni abrir la app al público para uso real todavía.
 
-For a Worker with static assets, use:
-- Build command: npm run build
-- Deploy command: npx wrangler deploy
-- Configuration: wrangler.jsonc
+1. En Cloudflare, Workers & Pages > D1 SQL Database > Create database. Nombre: huella-db.
+2. Abre la base de datos > Console y ejecuta el contenido completo de schema.sql.
+3. Copia el Database ID de la base D1 (no es un secreto) y reemplaza REPLACE_WITH_D1_DATABASE_ID en wrangler.jsonc por ese ID.
+4. En Worker huella-app > Settings > Bindings > Add > D1 database. Variable name: DB. Selecciona la base huella-db y guarda.
+5. Actualiza los archivos de GitHub con este ZIP y espera el nuevo despliegue automático. Si Cloudflare pide un build command: npm run build. No añadas tokens de JC Fútbol Coach.
+6. Abre https://TU-WORKER.workers.dev/api/health. La respuesta debe indicar "databaseConfigured":true. Después prueba guardar una acción y verla en Mi camino.
 
-Do not deploy until dependencies/build have been checked and Cloudflare account permissions are confirmed.
-Create D1 and bind it as DB only after reviewing the schema. No secrets are included in this ZIP.
+Estado de esta entrega:
+- Implementado: API D1 para guardar, listar y eliminar acciones por identificador aleatorio de dispositivo; contador de acciones por día; errores visibles si falta D1; esquema SQL.
+- No implementado aún: autenticación real/cuentas, protección robusta de datos privados, testimonios con panel de moderación, sincronización offline, exportación/eliminación de cuenta, modo católico funcional.
+- No publicar para uso real hasta implementar autenticación y revisar seguridad. La identificación de dispositivo solo sirve para probar el flujo de D1, no para garantizar privacidad.

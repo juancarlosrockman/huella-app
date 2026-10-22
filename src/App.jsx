@@ -1,44 +1,20 @@
-import { useState } from "react";
-import { Heart, Home, BookOpen, UserRound, Flame, LockKeyhole, Check, Menu } from "lucide-react";
-
+import { useEffect, useState } from "react";
+import { Heart, Home, BookOpen, UserRound, Flame, LockKeyhole, Check, Menu, Trash2, RefreshCw } from "lucide-react";
 const SLOGAN = "Pequeñas acciones. Grandes huellas.";
-
-export default function App() {
-  const [view, setView] = useState("inicio");
-  const [action, setAction] = useState("");
-  const [saved, setSaved] = useState(false);
-  const [showAbout, setShowAbout] = useState(false);
-
-  return <div className="app-shell">
-    <header className="topbar">
-      <div className="brand-mark" aria-hidden="true"><Heart size={25} strokeWidth={2.7}/><span className="foot">●</span></div>
-      <div className="brand-copy"><strong>HUELLA</strong><span>{SLOGAN}</span></div>
-      <button className="icon-button" aria-label="Acerca de HUELLA" onClick={() => setShowAbout(!showAbout)}><Menu/></button>
-    </header>
-    {showAbout && <section className="about panel"><strong>El cambio empieza por nosotros.</strong><p>HUELLA busca animarnos a hacer pequeñas cosas buenas por los demás, sin competir ni juzgar.</p><button className="text-button" onClick={() => setShowAbout(false)}>Cerrar</button></section>}
-    <main>
-      {view === "inicio" && <>
-        <section className="welcome"><span className="eyebrow">UN GESTO A LA VEZ</span><h1>El cambio empieza<br/>por nosotros.</h1><p>Cada pequeño gesto cuenta.</p></section>
-        <section className="panel action-panel">
-          <label htmlFor="action">¿Qué buena acción hiciste?</label>
-          <textarea id="action" maxLength={250} value={action} onChange={e => {setAction(e.target.value); setSaved(false);}} placeholder="Escribe ese pequeño gesto..."/>
-          <div className="input-meta"><span>{action.length}/250</span><span>Tu bitácora es privada</span></div>
-          <button className="primary-button" disabled={!action.trim()} onClick={() => {setSaved(true); setAction("");}}>Guardar en mi camino <Heart size={18}/></button>
-          {saved && <p className="success"><Check size={17}/> ¡Gracias por dejar tu huella! Cada pequeño gesto cuenta.</p>}
-          <p className="privacy-note"><LockKeyhole size={14}/> Vista previa: todavía no guarda datos en una cuenta.</p>
-        </section>
-        <section className="counter panel"><div className="section-kicker"><Flame size={18}/> ENTRE TODOS</div><h2>Una comunidad que deja huella</h2><p>Pronto veremos aquí las buenas acciones compartidas por la comunidad.</p><span className="preview-label">Contador comunitario pendiente de conectar a datos reales</span></section>
-      </>}
-      {view === "testimonios" && <section className="panel content-panel"><span className="eyebrow">COMUNIDAD</span><h1>Testimonios</h1><p>Historias anónimas que inspiran, revisadas antes de publicarse.</p><div className="empty-state"><Heart size={28}/><strong>Estamos preparando este espacio</strong><span>Los testimonios no se publicarán hasta tener moderación real.</span></div></section>}
-      {view === "camino" && <section className="panel content-panel"><span className="eyebrow">TU ESPACIO PRIVADO</span><h1>Mi camino</h1><p>Tu bitácora será privada, cronológica y sin puntuaciones ni competencia.</p><div className="empty-state"><BookOpen size={28}/><strong>Tu bitácora estará aquí</strong><span>El guardado seguro requiere configurar autenticación y base de datos.</span></div></section>}
-      {view === "perfil" && <section className="panel content-panel"><span className="eyebrow">CONFIGURACIÓN</span><h1>Perfil y privacidad</h1><p>HUELLA será gratuita y no venderá tus datos ni tendrá perfiles públicos.</p><div className="setting-row"><LockKeyhole/><div><strong>Privacidad primero</strong><span>Autenticación, exportación y eliminación de cuenta deben implementarse antes del lanzamiento público.</span></div></div><div className="setting-row"><Heart/><div><strong>Modo general y modo católico</strong><span>La experiencia católica será opcional y el cambio será irreversible según lo acordado.</span></div></div></section>}
-    </main>
-    <nav className="bottom-nav" aria-label="Navegación principal">
-      <button className={view==="inicio"?"active":""} onClick={()=>setView("inicio")}><Home/><span>Inicio</span></button>
-      <button className={view==="testimonios"?"active":""} onClick={()=>setView("testimonios")}><Heart/><span>Testimonios</span></button>
-      <button className={view==="camino"?"active":""} onClick={()=>setView("camino")}><BookOpen/><span>Mi camino</span></button>
-      <button className={view==="perfil"?"active":""} onClick={()=>setView("perfil")}><UserRound/><span>Perfil</span></button>
-    </nav>
-    <footer>HUELLA <span>·</span> {SLOGAN}</footer>
-  </div>;
+function uuid(){return crypto.randomUUID();}
+function deviceId(){let id=localStorage.getItem('huella_device_id');if(!id){id=uuid();localStorage.setItem('huella_device_id',id)}return id}
+async function api(path,options={}){const res=await fetch(path,{...options,headers:{'content-type':'application/json','x-huella-device':deviceId(),...(options.headers||{})}});const data=await res.json().catch(()=>({error:'invalid_response'}));if(!res.ok)throw new Error(data.message||data.error||`Error ${res.status}`);return data}
+export default function App(){
+ const [view,setView]=useState('inicio'),[action,setAction]=useState(''),[saved,setSaved]=useState(''),[error,setError]=useState(''),[actions,setActions]=useState([]),[loading,setLoading]=useState(false),[showAbout,setShowAbout]=useState(false),[community,setCommunity]=useState(null),[dbReady,setDbReady]=useState(false);
+ async function load(){setLoading(true);setError('');try{const health=await api('/api/health');setDbReady(!!health.databaseConfigured);if(health.databaseConfigured){const [a,c]=await Promise.all([api('/api/actions'),api('/api/community')]);setActions(a.actions||[]);setCommunity(c)}else{setError('La interfaz está publicada, pero falta conectar la base de datos D1 en Cloudflare. Tus acciones no se han guardado.')}}catch(e){setError(`No se pudo conectar con el servicio: ${e.message}`)}finally{setLoading(false)}}
+ useEffect(()=>{load()},[]);
+ async function save(){if(!action.trim())return;setLoading(true);setError('');setSaved('');try{await api('/api/actions',{method:'POST',body:JSON.stringify({id:uuid(),body:action.trim(),action_at:new Date().toISOString()})});setAction('');setSaved('¡Gracias por dejar tu huella! Cada pequeño gesto cuenta.');await load()}catch(e){setError(`No se guardó la acción. ${e.message}`)}finally{setLoading(false)}}
+ async function remove(id){if(!confirm('¿Eliminar esta acción de tu bitácora?'))return;try{await api(`/api/actions/${id}`,{method:'DELETE'});await load()}catch(e){setError(`No se pudo eliminar: ${e.message}`)}}
+ return <div className="app-shell"><header className="topbar"><div className="brand-mark" aria-hidden="true"><Heart size={25} strokeWidth={2.7}/><span className="foot">●</span></div><div className="brand-copy"><strong>HUELLA</strong><span>{SLOGAN}</span></div><button className="icon-button" aria-label="Acerca de HUELLA" onClick={()=>setShowAbout(!showAbout)}><Menu/></button></header>
+ {showAbout&&<section className="about panel"><strong>El cambio empieza por nosotros.</strong><p>HUELLA busca animarnos a hacer pequeñas cosas buenas por los demás, sin competir ni juzgar.</p><button className="text-button" onClick={()=>setShowAbout(false)}>Cerrar</button></section>}
+ <main>{view==='inicio'&&<><section className="welcome"><span className="eyebrow">UN GESTO A LA VEZ</span><h1>El cambio empieza<br/>por nosotros.</h1><p>Cada pequeño gesto cuenta.</p></section><section className="panel action-panel"><label htmlFor="action">¿Qué buena acción hiciste?</label><textarea id="action" maxLength={250} value={action} onChange={e=>{setAction(e.target.value);setSaved('')}} placeholder="Escribe ese pequeño gesto..."/><div className="input-meta"><span>{action.length}/250</span><span>Bitácora beta en este dispositivo</span></div><button className="primary-button" disabled={!action.trim()||loading||!dbReady} onClick={save}>{loading?'Guardando…':'Guardar en mi camino'} <Heart size={18}/></button>{saved&&<p className="success"><Check size={17}/>{saved}</p>}{error&&<p className="error-message" role="alert">{error}</p>}<p className="privacy-note"><LockKeyhole size={14}/> Esta versión usa un identificador de dispositivo, no una cuenta segura. No guardes información sensible.</p><button className="text-button refresh-button" onClick={load}><RefreshCw size={14}/> Actualizar conexión</button></section><section className="counter panel"><div className="section-kicker"><Flame size={18}/> ENTRE TODOS</div><h2>Una comunidad que deja huella</h2>{community?<><div className="community-numbers"><div><strong>{community.yesterday.actions}</strong><span>acciones ayer</span></div><div><strong>{community.today.actions}</strong><span>acciones hoy</span></div></div><p>Conteo de acciones confirmadas registradas en HUELLA. Los dispositivos no equivalen necesariamente a personas.</p></>:<p>El contador aparecerá cuando la base D1 esté conectada.</p>}</section></>}
+ {view==='testimonios'&&<section className="panel content-panel"><span className="eyebrow">COMUNIDAD</span><h1>Testimonios</h1><p>Historias anónimas que inspiran, revisadas antes de publicarse.</p><div className="empty-state"><Heart size={28}/><strong>Publicación todavía desactivada</strong><span>La moderación y el panel de revisión deben implementarse antes de aceptar o publicar testimonios.</span></div></section>}
+ {view==='camino'&&<section className="panel content-panel"><span className="eyebrow">TU ESPACIO</span><h1>Mi camino</h1><p>Tu bitácora de acciones registradas en este dispositivo.</p>{loading&&<p>Cargando…</p>}{!actions.length&&!loading&&<div className="empty-state"><BookOpen size={28}/><strong>Aún no hay acciones guardadas</strong><span>Registra una buena acción desde Inicio.</span></div>}{actions.map(a=><article className="action-entry" key={a.id}><p>{a.body}</p><time>{new Date(a.action_at).toLocaleString('es-PE',{dateStyle:'medium',timeStyle:'short'})}</time><button aria-label="Eliminar acción" className="delete-button" onClick={()=>remove(a.id)}><Trash2 size={16}/> Eliminar</button></article>)}{error&&<p className="error-message">{error}</p>}<button className="text-button refresh-button" onClick={load}><RefreshCw size={14}/> Actualizar bitácora</button></section>}
+ {view==='perfil'&&<section className="panel content-panel"><span className="eyebrow">CONFIGURACIÓN</span><h1>Perfil y privacidad</h1><p>HUELLA será gratuita y no venderá tus datos ni tendrá perfiles públicos.</p><div className="setting-row"><LockKeyhole/><div><strong>Estado de la conexión</strong><span>{dbReady?'La API indica que D1 está configurada.':'D1 no está conectada o no está disponible.'}</span></div></div><div className="setting-row"><Heart/><div><strong>Modo general y modo católico</strong><span>El modo católico será opcional. La selección irreversible por cuenta requiere autenticación real, aún pendiente.</span></div></div><div className="setting-row"><BookOpen/><div><strong>Esta es una versión beta</strong><span>El identificador de dispositivo no sustituye el inicio de sesión. No hay cuentas, exportación, sincronización offline ni moderación todavía.</span></div></div><button className="text-button refresh-button" onClick={load}><RefreshCw size={14}/> Comprobar estado</button></section>}</main>
+ <nav className="bottom-nav" aria-label="Navegación principal"><button className={view==='inicio'?'active':''} onClick={()=>setView('inicio')}><Home/><span>Inicio</span></button><button className={view==='testimonios'?'active':''} onClick={()=>setView('testimonios')}><Heart/><span>Testimonios</span></button><button className={view==='camino'?'active':''} onClick={()=>setView('camino')}><BookOpen/><span>Mi camino</span></button><button className={view==='perfil'?'active':''} onClick={()=>setView('perfil')}><UserRound/><span>Perfil</span></button></nav><footer>HUELLA <span>·</span> {SLOGAN}</footer></div>
 }

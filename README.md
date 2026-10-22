@@ -1,46 +1,23 @@
-# HUELLA
+# HUELLA — beta técnica para Cloudflare Workers + D1
 
-**Pequeñas acciones. Grandes huellas.**
+HUELLA es una PWA React/Vite servida por Cloudflare Workers. Esta versión agrega una API inicial conectada a D1 para probar persistencia de acciones.
 
-Initial Cloudflare-oriented scaffold for HUELLA. This is a starting point, not a claim that all agreed features are implemented.
+## Preparación
+1. `npm install`
+2. Crear una base Cloudflare D1 llamada `huella-db`.
+3. Ejecutar `schema.sql` en la consola D1.
+4. Reemplazar `REPLACE_WITH_D1_DATABASE_ID` en `wrangler.jsonc` por el ID real de la base.
+5. Vincular D1 al Worker con variable de binding `DB`.
+6. `npm run build`; desplegar desde la integración Cloudflare/GitHub o con `npm run deploy` tras revisar configuración.
 
-## Stack
-- React + Vite frontend
-- Cloudflare Worker serving static assets and `/api/*`
-- Draft Cloudflare D1 schema in `schema.sql`
-- PWA manifest
-- Spanish-first responsive UI, yellow/red primary identity
+## API disponible
+- `GET /api/health`: estado del Worker y si existe binding D1.
+- `GET /api/actions`: lista las acciones asociadas al identificador de dispositivo del navegador.
+- `POST /api/actions`: crea una acción (1–250 caracteres).
+- `DELETE /api/actions/:id`: elimina una acción del mismo identificador de dispositivo.
+- `GET /api/community`: recuentos diarios de acciones registradas.
 
-## Local development
-```bash
-npm install
-npm run dev
-npm run build
-npx wrangler dev
-```
+## Límite crítico de seguridad
+Esta es una beta técnica, NO un sistema de cuentas. El identificador aleatorio de dispositivo se guarda en localStorage y se envía al Worker; no es autenticación fuerte y puede perderse o ser suplantado. No guardar datos sensibles ni anunciar la bitácora como segura/privada. Antes de uso público hay que implementar autenticación real, autorización por usuario, controles de abuso/rate limiting y pruebas de seguridad.
 
-## Cloudflare setup
-The repository uses `wrangler.jsonc` for a Worker with static assets. The first deploy can serve the UI and `GET /api/health`. Create the D1 database in Cloudflare and add its binding before implementing data endpoints.
-
-## Implemented in this scaffold
-- Responsive initial interface
-- Four navigation areas: Inicio, Testimonios, Mi camino, Perfil
-- 250-character action text input (not persisted yet)
-- PWA manifest
-- Worker health endpoint
-- Initial D1 schema draft
-
-## Not implemented yet
-- Real authentication (email/password, Google, Apple), sessions and recovery
-- Secure journal CRUD and conflict-safe offline sync
-- Server-backed community counter and timezone rules
-- Testimony submission, moderation dashboard, reporting and withdrawal
-- Catholic mode confirmation, liturgical calendar and reviewed catechesis
-- Secure PIN/biometric integration
-- Data export, deletion workflows, backups and production security review
-
-## Security
-Never commit API keys, OAuth secrets, session secrets, database credentials or private user data. Do not enable public sign-up until authentication and server-side authorization exist. Review the schema before applying it. Moderation and privacy controls are launch blockers.
-
-## Product principles
-Free access; no data sale or invasive ads. No public profiles, follower lists, rankings, streaks or public action counts per person. Public testimonies remain anonymous and pending until human moderation. General mode stays religiously neutral; Catholic mode is optional and one-way. Community totals must use confirmed server records, never fabricated values.
+Testimonios no se reciben ni publican todavía; no existe panel de moderación. No hay sincronización offline ni modo católico funcional. El contador actual es por registros/dispositivos, no por personas verificadas.
