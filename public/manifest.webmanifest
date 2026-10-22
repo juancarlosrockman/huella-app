@@ -1,0 +1,12 @@
+{
+  "id": "/",
+  "name": "HUELLA",
+  "short_name": "HUELLA",
+  "description": "Pequeñas acciones. Grandes huellas.",
+  "lang": "es-PE",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#fffdf5",
+  "theme_color": "#fff04d"
+}

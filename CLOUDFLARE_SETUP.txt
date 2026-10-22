@@ -1,0 +1,11 @@
+HUELLA — Cloudflare deployment notes
+
+This is a starter scaffold. It does not yet implement the production user flows.
+
+For a Worker with static assets, use:
+- Build command: npm run build
+- Deploy command: npx wrangler deploy
+- Configuration: wrangler.jsonc
+
+Do not deploy until dependencies/build have been checked and Cloudflare account permissions are confirmed.
+Create D1 and bind it as DB only after reviewing the schema. No secrets are included in this ZIP.
