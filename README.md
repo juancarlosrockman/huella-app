@@ -1,6 +1,6 @@
 # HUELLA — beta técnica para Cloudflare Workers + D1
 
-HUELLA es una PWA React/Vite servida por Cloudflare Workers. Esta versión agrega una API inicial conectada a D1 para probar persistencia de acciones.
+HUELLA es una PWA React/Vite servida por Cloudflare Workers. Usa Wrangler 4.20.0 o posterior para admitir el enrutamiento selectivo `assets.run_worker_first`. Esta versión agrega una API inicial conectada a D1 para probar persistencia de acciones.
 
 ## Preparación
 1. `npm install`

@@ -3,7 +3,22 @@
   "name": "huella-app",
   "main": "src/worker.js",
   "compatibility_date": "2026-10-22",
-  "assets": { "directory": "./dist", "binding": "ASSETS", "not_found_handling": "single-page-application" },
-  "d1_databases": [{ "binding": "DB", "database_name": "huella-db", "database_id": "b621fe8e-4b64-44ba-bf65-cb3dc8322e31" }],
-  "observability": { "enabled": true }
+  "assets": {
+    "directory": "./dist",
+    "binding": "ASSETS",
+    "not_found_handling": "single-page-application",
+    "run_worker_first": [
+      "/api/*"
+    ]
+  },
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "huella-db",
+      "database_id": "b621fe8e-4b64-44ba-bf65-cb3dc8322e31"
+    }
+  ],
+  "observability": {
+    "enabled": true
+  }
 }

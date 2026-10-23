@@ -5,7 +5,7 @@ La base D1 existente es huella-db. Su ID ya está incorporado en wrangler.jsonc.
 IMPORTANTE: esta beta NO tiene autenticación real. El identificador de dispositivo es pseudónimo y no protege un diario privado. No usar con datos sensibles ni abrir al público todavía.
 
 PASOS
-1. Reemplaza en GitHub los archivos del proyecto por los de este ZIP (o sube el ZIP según tu flujo habitual). No modifiques el proyecto JC Fútbol Coach.
+1. Esta versión actualiza Wrangler a la rama 4 (mínimo 4.20.0) porque run_worker_first con rutas requiere esa versión. Reemplaza los archivos del proyecto por los de este ZIP. No modifiques el proyecto JC Fútbol Coach.
 2. En Cloudflare > Workers & Pages > huella-app > Settings > Bindings, confirma que exista una sola vinculación D1: nombre DB, valor huella-db. Ya está configurada según la revisión anterior.
 3. En Settings > Builds, conserva Build command: npm run build. Cambia temporalmente Deploy command a:
    npx wrangler d1 execute huella-db --remote --file=./schema.sql --yes && npx wrangler deploy
